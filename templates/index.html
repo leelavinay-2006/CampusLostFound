@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Lost & Found</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f6fb;
+            color: #172554;
+        }
+
+        header {
+            background: #172554;
+            color: white;
+            padding: 25px 8%;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+        }
+
+        header p {
+            margin: 0;
+            color: #dbeafe;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 0 18px;
+        }
+
+        .hero {
+            background: #dbeafe;
+            padding: 25px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 22px;
+        }
+
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px #1725540d;
+            margin-bottom: 24px;
+            min-width: 0;
+        }
+
+        label {
+            display: block;
+            margin: 14px 0 6px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font: inherit;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 85px;
+        }
+
+        button, .button {
+            display: inline-block;
+            background: #2563eb;
+            color: white;
+            padding: 12px 17px;
+            border: 0;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 16px;
+        }
+
+        button:hover, .button:hover {
+            background: #1d4ed8;
+        }
+
+        .message {
+            background: #dcfce7;
+            color: #166534;
+            padding: 13px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .search {
+            display: grid;
+            grid-template-columns: 1fr 150px auto;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .search button {
+            margin: 0;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 14px;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: left;
+        }
+
+        th {
+            background: #eff6ff;
+        }
+
+        .status {
+            font-weight: bold;
+        }
+
+        .lost {
+            color: #dc2626;
+        }
+
+        .found {
+            color: #15803d;
+        }
+
+        .empty {
+            color: #64748b;
+            text-align: center;
+            padding: 25px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #64748b;
+        }
+
+        @media (max-width: 700px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .search {
+                grid-template-columns: 1fr;
+            }
+
+            header {
+                padding: 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<header>
+    <h1>Campus Lost & Found</h1>
+    <p>Report lost belongings. Help someone find what they lost.</p>
+</header>
+
+<main>
+    <section class="hero">
+        <h2>Find it. Report it. Return it.</h2>
+        <p>A simple campus platform for reporting and searching
+        for lost and found belongings.</p>
+    </section>
+
+    {% with messages = get_flashed_messages() %}
+        {% for message in messages %}
+            <div class="message">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <div class="layout">
+        <section class="card">
+            <h2>Report an Item</h2>
+            <p>Fields marked * are required.</p>
+
+            <form method="POST">
+                <label for="status">Report Type *</label>
+                <select id="status" name="status" required>
+                    <option value="">Choose type</option>
+                    <option value="lost">I lost an item</option>
+                    <option value="found">I found an item</option>
+                </select>
+
+                <label for="item_name">Item Name *</label>
+                <input id="item_name" name="item_name"
+                    placeholder="e.g. Black backpack" required>
+
+                <label for="description">Description *</label>
+                <textarea id="description" name="description"
+                        placeholder="Describe the item..." required></textarea>
+
+                <label for="location">Location *</label>
+                <input id="location" name="location"
+                    placeholder="e.g. College library" required>
+
+                <label for="date">Date *</label>
+                <input id="date" name="date" type="date" required>
+
+                <label for="contact">Contact (optional)</label>
+                <input id="contact" name="contact"
+                    placeholder="Email or contact details">
+
+                <button type="submit">Submit Report</button>
+            </form>
+        </section>
+
+        <section class="card">
+            <h2>Search Reports</h2>
+            <p>Look through submitted lost and found items.</p>
+
+            <form method="GET" class="search">
+                <div>
+                    <label for="q">Search</label>
+                    <input id="q" name="q"
+            value="{{ request.args.get('q', '') }}"
+            placeholder="Bag, library, keys...">
+                </div>
+
+                <div>
+                    <label for="filter-status">Type</label>
+                    <select id="filter-status" name="status">
+                        <option value="">All reports</option>
+                        <option value="lost"
+                            {% if request.args.get('status') == 'lost' %}
+                                selected
+                            {% endif %}>Lost</option>
+                        <option value="found"
+                            {% if request.args.get('status') == 'found' %}
+                                selected
+                            {% endif %}>Found</option>
+                    </select>
+                </div>
+
+                <button type="submit">Search</button>
+            </form>
+
+            <p><strong>Reports shown:</strong> {{ reports|length }}</p>
+
+            {% if reports %}
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Type</th>
+                            <th>Item</th>
+                            <th>Location</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in reports %}
+                        <tr>
+                            <td>{{ r[0] }}</td>
+                            <td class="status {{ r[1]|lower }}">
+                                {{ r[1] }}
+                            </td>
+                            <td>
+                                <strong>{{ r[2] }}</strong><br>
+                                {{ r[3] }}
+                            </td>
+                            <td>{{ r[4] }}</td>
+                            <td>{{ r[5] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                <div class="empty">
+                    No reports found. Add a report or change your search.
+                </div>
+            {% endif %}
+        </section>
+    </div>
+</main>
+
+<footer>
+    Campus Lost & Found Smart Matcher · Student Project
+</footer>
+</body>
+</html>
